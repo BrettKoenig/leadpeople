@@ -1,0 +1,115 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String         @id @default(cuid())
+  email             String         @unique
+  password          String
+  name              String?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  stripeCustomerId  String?        @unique
+  subscription      Subscription?
+  contacts          Contact[]
+  interactions      Interaction[]
+  notes             Note[]
+  tags              Tag[]
+}
+
+model Subscription {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeSubscriptionId String   @unique
+  stripePriceId        String
+  status               String   // active, canceled, past_due, etc.
+  currentPeriodStart   DateTime
+  currentPeriodEnd     DateTime
+  cancelAtPeriodEnd    Boolean  @default(false)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model Contact {
+  id           String        @id @default(cuid())
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  firstName    String
+  lastName     String
+  email        String?
+  phone        String?
+  company      String?
+  position     String?
+  department   String?
+  location     String?
+  linkedin     String?
+  twitter      String?
+  notes        String?       @db.Text
+  lastContact  DateTime?
+  nextFollowUp DateTime?
+  relationship String?       // colleague, manager, direct_report, client, etc.
+  importance   String?       // high, medium, low
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  interactions Interaction[]
+  contactNotes Note[]
+  tags         Tag[]         @relation("ContactTags")
+
+  @@index([userId])
+}
+
+model Interaction {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contactId   String
+  contact     Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  type        String   // meeting, email, call, coffee, lunch, etc.
+  date        DateTime
+  duration    Int?     // in minutes
+  description String   @db.Text
+  location    String?
+  outcome     String?  @db.Text
+  followUp    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([contactId])
+  @@index([date])
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contactId String?
+  contact   Contact? @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  title     String?
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([contactId])
+}
+
+model Tag {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  color     String?   @default("#3B82F6")
+  contacts  Contact[] @relation("ContactTags")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([userId, name])
+  @@index([userId])
+}
