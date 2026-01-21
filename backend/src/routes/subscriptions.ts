@@ -8,10 +8,8 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2023-10-16',
 });
 
-router.use(authMiddleware);
-
 // Create checkout session
-router.post('/create-checkout-session', async (req: AuthRequest, res) => {
+router.post('/create-checkout-session', authMiddleware, async (req: AuthRequest, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.userId },
@@ -61,7 +59,7 @@ router.post('/create-checkout-session', async (req: AuthRequest, res) => {
 });
 
 // Create portal session
-router.post('/create-portal-session', async (req: AuthRequest, res) => {
+router.post('/create-portal-session', authMiddleware, async (req: AuthRequest, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.userId },
