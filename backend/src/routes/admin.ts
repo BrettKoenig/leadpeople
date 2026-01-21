@@ -5,6 +5,41 @@ import { adminMiddleware } from '../middleware/admin';
 
 const router = express.Router();
 
+// Emergency bootstrap endpoint - makes user admin by email (no auth required, uses secret key)
+router.post('/emergency-bootstrap', async (req, res) => {
+  try {
+    const { email, secret } = req.body;
+
+    // Check secret key
+    const expectedSecret = process.env.BOOTSTRAP_SECRET || 'temp-bootstrap-secret-12345';
+    if (secret !== expectedSecret) {
+      return res.status(403).json({ error: 'Invalid secret key' });
+    }
+
+    if (!email) {
+      return res.status(400).json({ error: 'Email required' });
+    }
+
+    // Make user admin
+    const user = await prisma.user.update({
+      where: { email },
+      data: { isAdmin: true },
+    });
+
+    res.json({
+      message: 'User is now an admin',
+      user: {
+        id: user.id,
+        email: user.email,
+        isAdmin: user.isAdmin,
+      },
+    });
+  } catch (error) {
+    console.error('Error in emergency bootstrap:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Bootstrap endpoint - makes current user admin if no admins exist
 router.post('/bootstrap', authMiddleware, async (req: AuthRequest, res) => {
   try {
