@@ -20,6 +20,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="nav-links">
             <Link to="/dashboard">Dashboard</Link>
             <Link to="/contacts">Contacts</Link>
+            <Link to="/settings">Settings</Link>
             {user?.subscription?.status === 'active' ? (
               <span className="pro-badge">Pro</span>
             ) : (

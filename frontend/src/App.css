@@ -423,3 +423,64 @@ body {
 .features-list li:last-child {
   border-bottom: none;
 }
+
+.settings-page h1 {
+  margin: 0 0 2rem;
+  color: #111827;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 2rem;
+}
+
+.settings-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.settings-card h2 {
+  margin: 0 0 1.5rem;
+  color: #111827;
+  font-size: 1.25rem;
+}
+
+.settings-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.subscription-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.status-active {
+  color: #059669;
+  font-weight: 500;
+}
+
+.status-inactive {
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.help-text {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin-top: -0.5rem;
+}
+
+.success-message {
+  background: #d1fae5;
+  color: #065f46;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem;
+}

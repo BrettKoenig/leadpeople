@@ -119,4 +119,76 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res) => {
   }
 });
 
+// Update profile
+router.put('/profile', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const { name, email } = req.body;
+
+    // Check if email is already taken by another user
+    if (email) {
+      const existingUser = await prisma.user.findUnique({ where: { email } });
+      if (existingUser && existingUser.id !== req.userId) {
+        return res.status(400).json({ error: 'Email already in use' });
+      }
+    }
+
+    const user = await prisma.user.update({
+      where: { id: req.userId },
+      data: {
+        name: name || undefined,
+        email: email || undefined,
+      },
+    });
+
+    res.json({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+    });
+  } catch (error) {
+    console.error('Profile update error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Update password
+router.put('/password', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Current and new password are required' });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const validPassword = await bcrypt.compare(currentPassword, user.password);
+    if (!validPassword) {
+      return res.status(401).json({ error: 'Current password is incorrect' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await prisma.user.update({
+      where: { id: req.userId },
+      data: { password: hashedPassword },
+    });
+
+    res.json({ message: 'Password updated successfully' });
+  } catch (error) {
+    console.error('Password update error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;
