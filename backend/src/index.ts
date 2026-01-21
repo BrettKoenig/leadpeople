@@ -7,6 +7,7 @@ import interactionRoutes from './routes/interactions';
 import noteRoutes from './routes/notes';
 import tagRoutes from './routes/tags';
 import subscriptionRoutes from './routes/subscriptions';
+import adminRoutes from './routes/admin';
 
 dotenv.config();
 
@@ -32,6 +33,7 @@ app.use('/api/interactions', interactionRoutes);
 app.use('/api/notes', noteRoutes);
 app.use('/api/tags', tagRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

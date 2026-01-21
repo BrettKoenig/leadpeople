@@ -5,6 +5,7 @@ import { Dashboard } from './pages/Dashboard';
 import { Contacts } from './pages/Contacts';
 import { Pricing } from './pages/Pricing';
 import { Settings } from './pages/Settings';
+import { Admin } from './pages/Admin';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import './App.css';
 
@@ -43,6 +44,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Settings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <Admin />
             </ProtectedRoute>
           }
         />

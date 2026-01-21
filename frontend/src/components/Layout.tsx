@@ -38,6 +38,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <Link to="/dashboard" onClick={closeMenu}>Dashboard</Link>
             <Link to="/contacts" onClick={closeMenu}>Contacts</Link>
             <Link to="/settings" onClick={closeMenu}>Settings</Link>
+            {user?.isAdmin && (
+              <Link to="/admin" onClick={closeMenu}>Admin</Link>
+            )}
             {user?.subscription?.status === 'active' ? (
               <span className="pro-badge">Pro</span>
             ) : (

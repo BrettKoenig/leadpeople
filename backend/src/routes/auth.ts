@@ -21,8 +21,16 @@ const loginSchema = z.object({
 // Signup
 router.post('/signup', async (req, res) => {
   try {
-    // Check if registration is enabled
-    const allowRegistration = process.env.ALLOW_REGISTRATION !== 'false';
+    // Check if registration is enabled (from database settings)
+    const registrationSetting = await prisma.setting.findUnique({
+      where: { key: 'ALLOW_REGISTRATION' },
+    });
+
+    // Fall back to environment variable if setting doesn't exist
+    const allowRegistration = registrationSetting
+      ? registrationSetting.value !== 'false'
+      : process.env.ALLOW_REGISTRATION !== 'false';
+
     if (!allowRegistration) {
       return res.status(403).json({ error: 'Registration is currently disabled' });
     }
@@ -36,13 +44,45 @@ router.post('/signup', async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Check if this is the first user (make them admin)
+    const userCount = await prisma.user.count();
+    const isFirstUser = userCount === 0;
+
     const user = await prisma.user.create({
       data: {
         email,
         password: hashedPassword,
         name,
+        isAdmin: isFirstUser,
       },
     });
+
+    // Initialize default settings if this is the first user
+    if (isFirstUser) {
+      await prisma.setting.upsert({
+        where: { key: 'ALLOW_REGISTRATION' },
+        update: {},
+        create: {
+          key: 'ALLOW_REGISTRATION',
+          value: 'true',
+          type: 'boolean',
+          label: 'Allow Registration',
+          description: 'Allow new users to register for accounts',
+        },
+      });
+
+      await prisma.setting.upsert({
+        where: { key: 'STRIPE_MODE' },
+        update: {},
+        create: {
+          key: 'STRIPE_MODE',
+          value: process.env.STRIPE_MODE || 'test',
+          type: 'string',
+          label: 'Stripe Mode',
+          description: 'Current Stripe configuration mode (test or production)',
+        },
+      });
+    }
 
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, {
       expiresIn: '30d',
@@ -54,6 +94,7 @@ router.post('/signup', async (req, res) => {
         id: user.id,
         email: user.email,
         name: user.name,
+        isAdmin: user.isAdmin,
       },
     });
   } catch (error) {
@@ -90,6 +131,7 @@ router.post('/login', async (req, res) => {
         id: user.id,
         email: user.email,
         name: user.name,
+        isAdmin: user.isAdmin,
       },
     });
   } catch (error) {
@@ -118,6 +160,7 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res) => {
       id: user.id,
       email: user.email,
       name: user.name,
+      isAdmin: user.isAdmin,
       subscription: user.subscription,
     });
   } catch (error) {

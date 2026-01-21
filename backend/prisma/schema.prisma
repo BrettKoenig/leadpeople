@@ -12,6 +12,7 @@ model User {
   email             String         @unique
   password          String
   name              String?
+  isAdmin           Boolean        @default(false)
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
   stripeCustomerId  String?        @unique
@@ -112,4 +113,15 @@ model Tag {
 
   @@unique([userId, name])
   @@index([userId])
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  type      String   // boolean, string, number
+  label     String
+  description String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
