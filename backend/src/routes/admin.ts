@@ -5,7 +5,39 @@ import { adminMiddleware } from '../middleware/admin';
 
 const router = express.Router();
 
-// Apply auth middleware to all routes
+// Bootstrap endpoint - makes current user admin if no admins exist
+router.post('/bootstrap', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    // Check if any admins exist
+    const adminCount = await prisma.user.count({
+      where: { isAdmin: true },
+    });
+
+    if (adminCount > 0) {
+      return res.status(403).json({ error: 'Admin users already exist' });
+    }
+
+    // Make current user admin
+    const user = await prisma.user.update({
+      where: { id: req.userId },
+      data: { isAdmin: true },
+    });
+
+    res.json({
+      message: 'You are now an admin',
+      user: {
+        id: user.id,
+        email: user.email,
+        isAdmin: user.isAdmin,
+      },
+    });
+  } catch (error) {
+    console.error('Error bootstrapping admin:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Apply auth middleware to all routes below
 router.use(authMiddleware);
 router.use(adminMiddleware);
 
