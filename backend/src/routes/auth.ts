@@ -21,6 +21,12 @@ const loginSchema = z.object({
 // Signup
 router.post('/signup', async (req, res) => {
   try {
+    // Check if registration is enabled
+    const allowRegistration = process.env.ALLOW_REGISTRATION !== 'false';
+    if (!allowRegistration) {
+      return res.status(403).json({ error: 'Registration is currently disabled' });
+    }
+
     const { email, password, name } = signupSchema.parse(req.body);
 
     const existingUser = await prisma.user.findUnique({ where: { email } });
